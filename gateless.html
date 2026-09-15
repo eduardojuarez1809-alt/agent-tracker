@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Status Tracker</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 380px; border-top: 5px solid #00b4d8; }
+    .header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+    .header input { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
+    .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; background: #e0e1dd; font-weight: 600; font-size: 0.9rem; text-align: center; }
+    .timer { font-size: 2.2rem; font-weight: bold; color: #2b2d42; text-align: center; margin: 15px 0; }
+    .timer.overtime { color: #d90429; animation: pulse 1s infinite; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+    button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; background: #edf2f4; color: #2b2d42; }
+    button:hover { background: #8d99ae; color: white; }
+    button.active { background: #00b4d8; color: white; }
+    .btn-out { grid-column: span 2; background: #d90429; color: white; margin-top: 10px; }
+    .btn-out:hover { background: #ef233c; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <input type="text" id="agentName" placeholder="Nombre / ID del Agente">
+    <div id="currentStatus" class="status-badge">Estado: Offline</div>
+  </div>
+
+  <div class="timer" id="timerDisplay">00:00:00</div>
+
+  <div class="grid">
+    <button onclick="changeStatus('Available', 0)">Available</button>
+    <button onclick="changeStatus('Break 1', 15)">Break 1 (15m)</button>
+    <button onclick="changeStatus('Lunch', 60)">Lunch (60m)</button>
+    <button onclick="changeStatus('Break 2', 15)">Break 2 (15m)</button>
+    <button onclick="changeStatus('Bathroom', 0)">Bathroom</button>
+    <button onclick="changeStatus('Personal', 0)">Personal (Emerg.)</button>
+    <button class="btn-out" onclick="changeStatus('Out of Shift', 0)">Out of Shift</button>
+  </div>
+</div>
+
+<script>
+  // PEGA AQUÍ LA URL QUE COPIASTE DE GOOGLE APPS SCRIPT
+  const GOOGLE_SCRIPT_URL = "PEGA_AQUI_TU_URL_DE_GOOGLE_APPS_SCRIPT";
+
+  let currentStatus = 'Offline';
+  let startTime = null;
+  let timerInterval = null;
+  let maxMinutes = 0;
+
+  function changeStatus(newStatus, limitMinutes) {
+    const agent = document.getElementById('agentName').value.trim();
+    if (!agent) {
+      alert("Por favor ingresa tu nombre o ID antes de marcar un estado.");
+      return;
+    }
+
+    const now = new Date();
+
+    // Si ya había un estado activo, guardamos el registro acumulado
+    if (currentStatus !== 'Offline' && startTime) {
+      const endTime = now;
+      const durationSeconds = Math.floor((endTime - startTime) / 1000);
+      
+      const payload = {
+        agent: agent,
+        status: currentStatus,
+        startTime: startTime.toLocaleString(),
+        endTime: endTime.toLocaleString(),
+        durationSeconds: durationSeconds,
+        overtime: maxMinutes > 0 && (durationSeconds > maxMinutes * 60)
+      };
+
+      // Envío de datos a Google Sheets
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(err => console.error("Error al guardar registro:", err));
+    }
+
+    currentStatus = newStatus;
+    maxMinutes = limitMinutes;
+    startTime = now;
+
+    document.getElementById('currentStatus').innerText = "Estado: " + newStatus;
+
+    if (newStatus === 'Out of Shift') {
+      clearInterval(timerInterval);
+      document.getElementById('timerDisplay').innerText = "00:00:00";
+      document.getElementById('timerDisplay').classList.remove('overtime');
+      currentStatus = 'Offline';
+      alert("Shift finalizado con éxito.");
+      return;
+    }
+
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      const elapsed = Math.floor((new Date() - startTime) / 1000);
+      const hrs = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+      const secs = String(elapsed % 60).padStart(2, '0');
+
+      const timerElement = document.getElementById('timerDisplay');
+      timerElement.innerText = `${hrs}:${mins}:${secs}`;
+
+      if (maxMinutes > 0 && elapsed > maxMinutes * 60) {
+        timerElement.classList.add('overtime');
+      } else {
+        timerElement.classList.remove('overtime');
+      }
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
