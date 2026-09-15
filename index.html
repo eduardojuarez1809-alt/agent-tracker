@@ -44,7 +44,6 @@
 </div>
 
 <script>
-  // PEGA AQUÍ LA URL QUE COPIASTE DE GOOGLE APPS SCRIPT
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyn8Yj4_3FhY-iDygNbUsRD7n3_NSt16MElW9nvqUmsGYB_4EkCakobokUapz_f_Jbyhg/exec";
 
   let currentStatus = 'Offline';
@@ -61,7 +60,6 @@
 
     const now = new Date();
 
-    // Si ya había un estado activo, guardamos el registro acumulado
     if (currentStatus !== 'Offline' && startTime) {
       const endTime = now;
       const durationSeconds = Math.floor((endTime - startTime) / 1000);
@@ -75,13 +73,15 @@
         overtime: maxMinutes > 0 && (durationSeconds > maxMinutes * 60)
       };
 
-      // Envío de datos a Google Sheets
       fetch(GOOGLE_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
         body: JSON.stringify(payload)
-      }).catch(err => console.error("Error al guardar registro:", err));
+      }).then(() => console.log("Registro enviado"))
+        .catch(err => console.error("Error al guardar registro:", err));
     }
 
     currentStatus = newStatus;
