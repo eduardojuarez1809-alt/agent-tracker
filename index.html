@@ -73,7 +73,7 @@
 </div>
 
 <script>
-  // Tu URL actualizada de Apps Script
+  // Endpoint de Google Apps Script integrado
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyn8Yj4_3FhY-iDygNbUsRD7n3_NSt16MElW9nvqUmsGYB_4EkCakobokUapz_f_Jbyhg/exec";
 
   let currentStatus = 'Offline';
@@ -154,7 +154,7 @@
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(data)
     })
-    .then(() => console.log("Datos enviándose a Google Sheets:", data))
+    .then(() => console.log("Datos enviados correctamente a Google Sheets:", data))
     .catch(err => console.error("Error al enviar datos:", err));
   }
 </script>
