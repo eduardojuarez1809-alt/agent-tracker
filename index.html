@@ -9,9 +9,31 @@
     body { background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
     .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 380px; border-top: 5px solid #00b4d8; text-align: center; }
     
-    /* Estilos del Logo */
-    .logo-container { margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
-    .logo-container img { max-width: 180px; height: auto; display: block; }
+    /* Estilo del Título Elegante Gateless */
+    .brand-header {
+      margin-bottom: 20px;
+    }
+    .brand-title {
+      font-family: 'Montserrat', 'Segoe UI', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #1e2246;
+      text-transform: lowercase;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .brand-title::first-letter {
+      text-transform: uppercase;
+    }
+    .brand-subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      color: #00b4d8;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-top: 4px;
+    }
 
     .header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
     .header input { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; text-align: center; }
@@ -30,9 +52,10 @@
 <body>
 
 <div class="card">
-  <!-- Logo de Gateless en la parte superior -->
-  <div class="logo-container">
-    <img src="gateless-logo.png" alt="Gateless Logo" onerror="this.src='https://i.imgur.com/8Q9Z5yG.png';">
+  <!-- Título Elegante Gateless -->
+  <div class="brand-header">
+    <h1 class="brand-title">gateless</h1>
+    <div class="brand-subtitle">Agent Tracker</div>
   </div>
 
   <div class="header">
@@ -143,7 +166,8 @@
 
     fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ responses: JSON.stringify(responseArray) })
     })
     .then(() => console.log("Registro enviado a Forms"))
