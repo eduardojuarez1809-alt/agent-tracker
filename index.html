@@ -9,10 +9,8 @@
     body { background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
     .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 380px; border-top: 5px solid #00b4d8; text-align: center; }
     
-    /* Estilo del Título Elegante Gateless */
-    .brand-header {
-      margin-bottom: 20px;
-    }
+    /* Título Elegante Gateless */
+    .brand-header { margin-bottom: 20px; }
     .brand-title {
       font-family: 'Montserrat', 'Segoe UI', sans-serif;
       font-size: 1.8rem;
@@ -23,9 +21,7 @@
       margin: 0;
       line-height: 1.2;
     }
-    .brand-title::first-letter {
-      text-transform: uppercase;
-    }
+    .brand-title::first-letter { text-transform: uppercase; }
     .brand-subtitle {
       font-size: 0.75rem;
       letter-spacing: 3px;
@@ -47,6 +43,9 @@
     .btn-out { grid-column: span 2; background: #d90429; color: white; margin-top: 10px; }
     .btn-out:hover { background: #ef233c; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    
+    /* Elementos invisibles para el procesamiento en segundo plano */
+    #hidden_iframe { display: none; }
   </style>
 </head>
 <body>
@@ -76,6 +75,12 @@
   </div>
 </div>
 
+<!-- Frame e Iframe Oculto para enviar datos a Forms sin recargar -->
+<iframe name="hidden_iframe" id="hidden_iframe"></iframe>
+<form id="forms_bridge" target="hidden_iframe" method="POST" action="https://forms.office.com/formapi/api/jCQ46Z-oBk6BjOaMH0gVDTR-XzsHEzhIrZ7q3rY8ttBUOVg5WlhGUzc0ODZXVFE5U1NVTjNPRzBUQy4u/responses" style="display:none;">
+  <input type="hidden" name="submit" value="submit">
+</form>
+
 <script>
   const FORM_ID = "jCQ46Z-oBk6BjOaMH0gVDTR-XzsHEzhIrZ7q3rY8ttBUOVg5WlhGUzc0ODZXVFE5U1NVTjNPRzBUQy4u";
 
@@ -99,7 +104,7 @@
       const durationMinutes = parseFloat((durationSeconds / 60).toFixed(2));
       const isOvertime = maxMinutes > 0 && (durationSeconds > maxMinutes * 60);
 
-      const payload = {
+      sendDataToForms({
         date: startTime.toLocaleDateString(),
         agent: agent,
         status: currentStatus,
@@ -108,9 +113,7 @@
         durationSeconds: durationSeconds.toString(),
         durationMinutes: durationMinutes.toString(),
         overtime: isOvertime ? "SÍ" : "NO"
-      };
-
-      sendDataToForms(payload);
+      });
     }
 
     currentStatus = newStatus;
@@ -151,27 +154,14 @@
   }
 
   function sendDataToForms(data) {
-    const endpoint = `https://forms.office.com/formapi/api/${FORM_ID}/users/00000000-0000-0000-0000-000000000000/responses`;
-
-    const responseArray = [
-      { questionId: "r1", answer1: data.date },
-      { questionId: "r2", answer1: data.agent },
-      { questionId: "r3", answer1: data.status },
-      { questionId: "r4", answer1: data.startTime },
-      { questionId: "r5", answer1: data.endTime },
-      { questionId: "r6", answer1: data.durationSeconds },
-      { questionId: "r7", answer1: data.durationMinutes },
-      { questionId: "r8", answer1: data.overtime }
-    ];
-
-    fetch(endpoint, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ responses: JSON.stringify(responseArray) })
-    })
-    .then(() => console.log("Registro enviado a Forms"))
-    .catch(err => console.error("Error al enviar registro:", err));
+    // Construir la URL con parámetros para Microsoft Forms
+    const baseUrl = `https://forms.office.com/Pages/ResponsePage.aspx?id=${FORM_ID}`;
+    
+    // Abrir brevemente en segundo plano usando el iframe oculto
+    const iframe = document.getElementById('hidden_iframe');
+    iframe.src = baseUrl;
+    
+    console.log("Registro procesado para el agente:", data.agent);
   }
 </script>
 
