@@ -3,15 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent Status Tracker</title>
+  <title>Agent Status Tracker - Gateless</title>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 380px; border-top: 5px solid #00b4d8; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 380px; border-top: 5px solid #00b4d8; text-align: center; }
+    
+    /* Estilos del Logo */
+    .logo-container { margin-bottom: 20px; display: flex; justify-content: center; align-items: center; }
+    .logo-container img { max-width: 180px; height: auto; display: block; }
+
     .header { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-    .header input { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; }
+    .header input { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem; text-align: center; }
     .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; background: #e0e1dd; font-weight: 600; font-size: 0.9rem; text-align: center; }
-    .timer { font-size: 2.2rem; font-weight: bold; color: #2b2d42; text-align: center; margin: 15px 0; }
+    .timer { font-size: 2.2rem; font-weight: bold; color: #1e2246; text-align: center; margin: 15px 0; }
     .timer.overtime { color: #d90429; animation: pulse 1s infinite; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
     button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; background: #edf2f4; color: #2b2d42; }
@@ -25,6 +30,11 @@
 <body>
 
 <div class="card">
+  <!-- Logo de Gateless en la parte superior -->
+  <div class="logo-container">
+    <img src="gateless-logo.png" alt="Gateless Logo" onerror="this.src='https://i.imgur.com/8Q9Z5yG.png';">
+  </div>
+
   <div class="header">
     <input type="text" id="agentName" placeholder="Nombre / ID del Agente">
     <div id="currentStatus" class="status-badge">Estado: Offline</div>
@@ -44,7 +54,7 @@
 </div>
 
 <script>
-  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyn8Yj4_3FhY-iDygNbUsRD7n3_NSt16MElW9nvqUmsGYB_4EkCakobokUapz_f_Jbyhg/exec";
+  const FORM_ID = "jCQ46Z-oBk6BjOaMH0gVDTR-XzsHEzhIrZ7q3rY8ttBUOVg5WlhGUzc0ODZXVFE5U1NVTjNPRzBUQy4u";
 
   let currentStatus = 'Offline';
   let startTime = null;
@@ -63,25 +73,21 @@
     if (currentStatus !== 'Offline' && startTime) {
       const endTime = now;
       const durationSeconds = Math.floor((endTime - startTime) / 1000);
-      
+      const durationMinutes = parseFloat((durationSeconds / 60).toFixed(2));
+      const isOvertime = maxMinutes > 0 && (durationSeconds > maxMinutes * 60);
+
       const payload = {
+        date: startTime.toLocaleDateString(),
         agent: agent,
         status: currentStatus,
-        startTime: startTime.toLocaleString(),
-        endTime: endTime.toLocaleString(),
-        durationSeconds: durationSeconds,
-        overtime: maxMinutes > 0 && (durationSeconds > maxMinutes * 60)
+        startTime: startTime.toLocaleTimeString(),
+        endTime: endTime.toLocaleTimeString(),
+        durationSeconds: durationSeconds.toString(),
+        durationMinutes: durationMinutes.toString(),
+        overtime: isOvertime ? "SÍ" : "NO"
       };
 
-      fetch(GOOGLE_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify(payload)
-      }).then(() => console.log("Registro enviado"))
-        .catch(err => console.error("Error al guardar registro:", err));
+      sendDataToForms(payload);
     }
 
     currentStatus = newStatus;
@@ -119,6 +125,29 @@
         timerElement.classList.remove('overtime');
       }
     }, 1000);
+  }
+
+  function sendDataToForms(data) {
+    const endpoint = `https://forms.office.com/formapi/api/${FORM_ID}/users/00000000-0000-0000-0000-000000000000/responses`;
+
+    const responseArray = [
+      { questionId: "r1", answer1: data.date },
+      { questionId: "r2", answer1: data.agent },
+      { questionId: "r3", answer1: data.status },
+      { questionId: "r4", answer1: data.startTime },
+      { questionId: "r5", answer1: data.endTime },
+      { questionId: "r6", answer1: data.durationSeconds },
+      { questionId: "r7", answer1: data.durationMinutes },
+      { questionId: "r8", answer1: data.overtime }
+    ];
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ responses: JSON.stringify(responseArray) })
+    })
+    .then(() => console.log("Registro enviado a Forms"))
+    .catch(err => console.error("Error al enviar registro:", err));
   }
 </script>
 
