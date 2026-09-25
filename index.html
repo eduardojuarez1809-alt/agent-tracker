@@ -73,7 +73,8 @@
 </div>
 
 <script>
-  const WEB_APP_URL = "const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4feS6S4dbzvues52hTDw6qJLnmrDRVZcxdFpptXHctMbuqKB3mnAXUoONJ_MeP5XFvw/exec';";
+  // ✅ CORREGIDO: URL limpia y válida hacia tu nuevo ejecutable de Google Apps Script
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw4feS6S4dbzvues52hTDw6qJLnmrDRVZcxdFpptXHctMbuqKB3mnAXUoONJ_MeP5XFvw/exec";
 
   let currentStatus = 'Offline';
   let startTime = null;
@@ -99,7 +100,7 @@
 
     const now = new Date();
 
-    // Enviar datos del estado anterior a Google Sheets
+    // Enviar datos del estado anterior
     if (currentStatus !== 'Offline' && startTime) {
       const endTime = now;
       const durationSeconds = Math.floor((endTime - startTime) / 1000);
@@ -197,7 +198,7 @@
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(data)
     })
-    .then(() => console.log("Datos enviados a Google Sheets:", data))
+    .then(() => console.log("Datos enviados correctamente:", data))
     .catch(err => console.error("Error al enviar datos:", err));
   }
 </script>
